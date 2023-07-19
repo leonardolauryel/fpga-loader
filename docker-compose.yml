@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  fpga-loader:
+    image: fpga-loader-image
+    container_name: fpga-loader-container
+    build:
+      context: ./docker
+      dockerfile: dockerfile
+    tty: true
+    ports:
+      - 8080:8000
+    volumes:
+      - ./src:/home/src
+    devices:
+      - /dev/bus/usb/001/019
+      - /dev/bus/usb/001/013

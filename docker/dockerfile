@@ -1,0 +1,29 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    tar \
+    sudo \
+    libusb-1.0-0 \
+    libavahi-client3 \
+    libavahi-core7 \
+    libdaemon0 \
+    bind9-host \
+    avahi-daemon
+
+RUN apt-get install -y \
+    python3.9 \
+    python3-pip   && \
+    pip install Flask
+
+WORKDIR /home/softwares
+
+COPY softwares/ /home/softwares
+
+RUN sudo dpkg -i digilent.adept.runtime_2.27.9-amd64.deb \
+ && sudo dpkg -i digilent.adept.utilities_2.7.1-amd64.deb
+
+WORKDIR /home/src
+
+CMD ["/bin/bash"]
