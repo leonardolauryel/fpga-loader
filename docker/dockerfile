@@ -15,7 +15,12 @@ RUN apt-get update && \
 RUN apt-get install -y \
     python3.9 \
     python3-pip   && \
-    pip install Flask
+    pip install Flask \
+    pip install pyserial
+
+RUN apt-get install -y \
+    usbutils \
+    nano
 
 WORKDIR /home/softwares
 
