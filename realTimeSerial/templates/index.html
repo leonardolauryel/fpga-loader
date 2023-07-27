@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #log {
+            width: 500px;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow: scroll;
+        }
+    </style>
+    <script type="text/javascript">
+        var shouldLog = false;
+        $(document).ready(function(){
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            $('#start').click(function() {
+                socket.emit('start_reading', {});
+                shouldLog = true;
+            });
+            $('#stop').click(function() {
+                socket.emit('stop_reading', {});
+                shouldLog = false;
+            });
+            socket.on('serial_data', function(message) {    
+                if (shouldLog) {
+                    console.log("Received data: " + message.data);
+                    // $('#log').append(message.data);
+                    // $('#log').append('<br>');
+                    // $('#log').scrollTop($('#log')[0].scrollHeight);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="log"></div>
+    <button id="start">Start Reading</button>
+    <button id="stop">Stop Reading</button>
+</body>
+</html>
