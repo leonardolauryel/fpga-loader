@@ -68,6 +68,7 @@ void loop() {
         turnOffAllUSBPorts();
       } else {
         USBPort = command.substring(4).toInt(); // Get the number after "off_"
+        turnOffUSBPort(USBPort);
       }
     } else {
       Serial.println("Comando inválido.");
