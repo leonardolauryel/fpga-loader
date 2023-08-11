@@ -1,38 +1,73 @@
-// Define os pinos da USB
+// Set USB pins
 const int USBPins[] = {2, 3, 4, 5, 6, 7, 8};
 const int numUSBs = sizeof(USBPins) / sizeof(USBPins[0]);
 
 void setup() {
   Serial.begin(9600);
 
-  // Configura os pinos dos USBs como saída
+  // Configure USB pins as output
   for (int i = 0; i < numUSBs; i++) {
     pinMode(USBPins[i], OUTPUT);
-    digitalWrite(USBPins[i], LOW); // Desliga todos os USBs no início
+    digitalWrite(USBPins[i], HIGH); // Turn Off all USBs at startup
+  }
+}
+
+boolean isValidUSBPort(int USBPort) {
+  return USBPort >= 0 && USBPort < numUSBs;
+}
+
+void turnOnAllUSBPorts() {
+  for (int i = 0; i < numUSBs; i++) {
+    digitalWrite(USBPins[i], LOW);
+  }
+
+  Serial.println("Todas as portas USB foram ligadas");
+}
+
+void turnOffAllUSBPorts() {
+  for (int i = 0; i < numUSBs; i++) {
+    digitalWrite(USBPins[i], HIGH);
+  }
+
+  Serial.println("Todas as portas USB foram desligadas");
+}
+
+void turnOnUSBPort(int USBPort) {
+  if (isValidUSBPort(USBPort)) {
+    digitalWrite(USBPins[USBPort], LOW); // Turn on USB
+    Serial.println("Porta USB " + String(USBPort) + " ligada.");
+  } else {
+    Serial.println("Porta USB inválida.");
+  }
+}
+
+void turnOffUSBPort(int USBPort) {
+  if (isValidUSBPort(USBPort)) {
+    digitalWrite(USBPins[USBPort], HIGH); // Turn off USB
+    Serial.println("Porta USB " + String(USBPort) + " desligada.");
+  } else {
+    Serial.println("Porta USB inválida.");
   }
 }
 
 void loop() {
   if (Serial.available() > 0) {
-    String comando = Serial.readStringUntil('\n'); // Lê o comando até encontrar uma quebra de linha
-    int USBIndex = -1;
+    String command = Serial.readStringUntil('\n'); // Read the command until it finds a line break
+    int USBPort = -1;
     
-    // Verifica se o comando começa com "on_" ou "off_"
-    if (comando.startsWith("on_")) {
-      USBIndex = comando.substring(3).toInt(); // Obtém o número após "on_"
-      if (USBIndex >= 0 && USBIndex < numUSBs) {
-        digitalWrite(USBPins[USBIndex], HIGH); // Liga a USB
-        Serial.println("Porta USB " + String(USBIndex) + " ligada.");
+    // Check if the command starts with "on_" or "off_"
+    if (command.startsWith("on_")) {
+      if (command == "on_all") {
+        turnOnAllUSBPorts();
       } else {
-        Serial.println("Porta USB inválida.");
+        USBPort = command.substring(3).toInt(); // Get the number after "on_"
+        turnOnUSBPort(USBPort);
       }
-    } else if (comando.startsWith("off_")) {
-      USBIndex = comando.substring(4).toInt(); // Obtém o número após "off_"
-      if (USBIndex >= 0 && USBIndex < numUSBs) {
-        digitalWrite(USBPins[USBIndex], LOW); // Desliga a USB
-        Serial.println("Porta USB " + String(USBIndex) + " desligada.");
+    } else if (command.startsWith("off_")) {
+      if (command == "off_all") {
+        turnOffAllUSBPorts();
       } else {
-        Serial.println("Porta USB inválida.");
+        USBPort = command.substring(4).toInt(); // Get the number after "off_"
       }
     } else {
       Serial.println("Comando inválido.");
