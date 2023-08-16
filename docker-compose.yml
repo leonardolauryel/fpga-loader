@@ -13,12 +13,12 @@ services:
       - 8000:8000
     env_file:
       - .env
+    privileged: true
     volumes:
       - ./fpga-loader:/home/fpga-loader
+      - /dev/:/dev/
     networks:
       - fpga-loader-network
-    devices:
-      - "/dev/bus/usb/:/dev/bus/usb/"
   
   RUPCon:
     image: rupcon-image

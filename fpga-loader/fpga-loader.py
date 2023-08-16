@@ -26,10 +26,10 @@ def upload_file():
     print(turnOnOffUSBPort("on", "1", 2))
 
     # # Cria a thread
-    # thread = threading.Thread(target=get_data_from_serial)
+    thread = threading.Thread(target=get_data_from_serial)
 
     # # Inicia a thread
-    # thread.start()
+    thread.start()
 
     try:
         result = upload_code_to_FPGA(file.filename, serialNumber)
@@ -40,19 +40,19 @@ def upload_file():
         return response
 
     # Aguarda o término da thread, caso deseje sincronizar a execução
-    # thread.join()
+    thread.join()
 
     print(turnOnOffUSBPort("off", "0", 0))
     print(turnOnOffUSBPort("off", "1", 0))
 
-    # with open('results.txt', 'r') as file:
-    #     conteudo = file.read()
+    with open('results.txt', 'r') as file:
+        conteudo = file.read()
     
-    # return conteudo
+    return conteudo
 
     
 
-    return 'FPGA programada com sucesso!\n\nLogs do adept:\n' + str(output)
+    #return 'FPGA programada com sucesso!\n\nLogs do adept:\n' + str(output)
 
 @app.route('/getResults', methods=['GET'])
 def getResults():
