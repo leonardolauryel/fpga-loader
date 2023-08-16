@@ -4,6 +4,7 @@ import serial
 import serial.tools.list_ports
 import time
 import sys
+import os
 
 # Configuração básica de log
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -48,6 +49,7 @@ def manageUSBPower():
     # Recebe a ação (on ou off) e a porta USB
     action = request.form.get('action')
     usbPort = request.form.get('usbPort')
+    timeSleep = int(request.form.get('timeSleep'))
 
     try:
         sendCommand(action + "_" + usbPort)
@@ -55,6 +57,7 @@ def manageUSBPower():
 
         resposta = ser.readline().decode().strip()
         logging.info(f"Resposta recebida: {resposta}")
+        time.sleep(timeSleep)
     except ValueError as err:
         logging.error("Erro: %s", err)
         response = make_response(str(err), 500)  # Status code 500 - Internal Server Error
@@ -70,4 +73,5 @@ def sendCommand(comando):
         raise ValueError(f"Erro ao enviar comando para o arduino: {str(e)}")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8001)
+    rupconPort = os.environ.get("RUPCON_PORT")
+    app.run(host='0.0.0.0', port=rupconPort)
