@@ -6,7 +6,7 @@ services:
     container_name: fpga-loader-container
     command: python3 ./fpga-loader.py
     build:
-      context: ./docker
+      context: ./fpga-loader
       dockerfile: dockerfile
     tty: true
     ports:

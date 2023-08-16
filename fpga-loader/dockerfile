@@ -1,5 +1,10 @@
 FROM ubuntu:22.04
 
+ENV MANAGE_USB_POWER=$MANAGE_USB_POWER \
+   RUPCON_HOST=$RUPCON_HOST \
+   RUPCON_PORT=$RUPCON_PORT \
+   FPGA_LOADER=$FPGA_LOADER
+
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -30,11 +35,6 @@ COPY softwares/ /home/softwares
 
 RUN sudo dpkg -i digilent.adept.runtime_2.27.9-amd64.deb \
  && sudo dpkg -i digilent.adept.utilities_2.7.1-amd64.deb
-
-ENV MANAGE_USB_POWER=$MANAGE_USB_POWER \
-   RUPCON_HOST=$RUPCON_HOST \
-   RUPCON_PORT=$RUPCON_PORT \
-   FPGA_LOADER=$FPGA_LOADER
 
 WORKDIR /home/fpga-loader
 
