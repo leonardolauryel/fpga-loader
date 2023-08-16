@@ -37,8 +37,7 @@ services:
     networks:
       - fpga-loader-network
     devices:
-      - /dev/ttyACM0:/dev/ttyACM0
-
+      %ARDUINO-DEVICE%
 
 networks:
   fpga-loader-network:
