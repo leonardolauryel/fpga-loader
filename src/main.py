@@ -4,6 +4,7 @@ import subprocess
 import threading
 import re
 import logging
+import requests
 
 # Configuração básica de log
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,11 +22,14 @@ def upload_file():
     # Recebe o serial number da placa a ser programada
     serialNumber = request.form.get('serialNumber')
 
-    # Cria a thread
-    thread = threading.Thread(target=get_data_from_serial)
+    print(turnOnOffUSBPort("on", "0", 0))
+    print(turnOnOffUSBPort("on", "1", 2))
 
-    # Inicia a thread
-    thread.start()
+    # # Cria a thread
+    # thread = threading.Thread(target=get_data_from_serial)
+
+    # # Inicia a thread
+    # thread.start()
 
     try:
         result = upload_code_to_FPGA(file.filename, serialNumber)
@@ -38,10 +42,15 @@ def upload_file():
     # Aguarda o término da thread, caso deseje sincronizar a execução
     # thread.join()
 
+    print(turnOnOffUSBPort("off", "0", 0))
+    print(turnOnOffUSBPort("off", "1", 0))
+
     # with open('results.txt', 'r') as file:
     #     conteudo = file.read()
     
     # return conteudo
+
+    
 
     return 'FPGA programada com sucesso!\n\nLogs do adept:\n' + str(output)
 
@@ -54,7 +63,9 @@ def getResults():
 
 @app.route('/getConnectedFPGA', methods=['GET'])
 def getConnectedFPGA():
+    print(turnOnOffUSBPort("on", "all", 4))
     output = subprocess.check_output(['djtgcfg', 'enum'], universal_newlines=True, encoding='latin1')
+    print(turnOnOffUSBPort("off", "all", 0))
     return output
 
 
@@ -91,6 +102,23 @@ def get_data_from_serial():
     except FileNotFoundError:
         print("Arquivo 'getSerial.py' não encontrado ou erro ao executar o comando.")
 
+def turnOnOffUSBPort(action, usbPort, timeSleep=0):
+    data = {'action': action, 'usbPort': usbPort, 'timeSleep': timeSleep}
+
+    try:
+        rupconHost = os.environ.get("RUPCON_HOST")
+        rupconPort = os.environ.get("RUPCON_PORT")
+
+        response = requests.post(f'http://{rupconHost}:{rupconPort}/manage_usb_power', data=data)
+
+        if response.status_code == 200:
+            return f'Resposta da API manage_usb_power: {response.text}'
+        else:
+            return f'Erro na requisição: {response.status_code}'
+    except requests.exceptions.RequestException as e:
+        return f'Erro na requisição: {e}'
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    fpgaLoaderPort = os.environ.get("FPGA_LOADER")
+    app.run(host='0.0.0.0', port=fpgaLoaderPort)
