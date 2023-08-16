@@ -4,7 +4,7 @@ services:
   fpga-loader:
     image: fpga-loader-image
     container_name: fpga-loader-container
-    command: python3 ./main.py
+    command: python3 ./fpga-loader.py
     build:
       context: ./docker
       dockerfile: dockerfile
@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./src:/home/src
+      - ./fpga-loader:/home/fpga-loader
     networks:
       - fpga-loader-network
     devices:

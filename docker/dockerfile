@@ -36,6 +36,6 @@ ENV MANAGE_USB_POWER=$MANAGE_USB_POWER \
    RUPCON_PORT=$RUPCON_PORT \
    FPGA_LOADER=$FPGA_LOADER
 
-WORKDIR /home/src
+WORKDIR /home/fpga-loader
 
 CMD ["/bin/bash"]
