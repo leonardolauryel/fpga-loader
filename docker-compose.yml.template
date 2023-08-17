@@ -39,5 +39,24 @@ services:
     devices:
       %ARDUINO-DEVICE%
 
+  ReTiCap:
+    image: reticap-image
+    container_name: reticap-container
+    command: python3 ./reticap.py
+    build:
+      context: ./realTimeVideoCapture
+      dockerfile: dockerfile
+    tty: true
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+    privileged: true
+    volumes:
+      - ./realTimeVideoCapture:/home/realTimeVideoCapture
+      - /dev/:/dev/
+    networks:
+      - fpga-loader-network
+
 networks:
   fpga-loader-network:

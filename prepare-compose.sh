@@ -11,4 +11,4 @@ done
 sed "s|%ARDUINO-DEVICE%|${devices}|" docker-compose.yml.template > docker-compose.yml
 
 # Execute o docker-compose com o arquivo atualizado
-docker compose up --build
+docker compose up
