@@ -1,4 +1,5 @@
 from flask import Flask, request, make_response
+import serial.tools.list_ports
 import os
 import subprocess
 import threading
@@ -6,29 +7,49 @@ import re
 import logging
 import requests
 
+def get_usb_serial_ports():
+    usb_ports = list(serial.tools.list_ports.comports())
+    usb_ports = [port.device for port in usb_ports if "USB" in port.device]
+
+    return usb_ports
+
 # Configuração básica de log
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 app = Flask(__name__)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    logging.info("Arquivo recebido via POST")
+    logging.info("\n\n\nArquivo recebido via POST")
     file = request.files['file']
     filepath = os.path.join("./", file.filename)
     file.save(filepath)
 
     # Recebe o serial number da placa a ser programada
     serialNumber = request.form.get('serialNumber')
+    serial_read_time = request.form.get('serialReadTime')
 
-    print(turnOnOffUSBPort("on", "0", 0))
-    print(turnOnOffUSBPort("on", "1", 2))
+    logging.info(f"serialNumber: {serialNumber}")
+    logging.info(f"serial_read_time: {serial_read_time}")
 
-    # # Cria a thread
-    thread = threading.Thread(target=get_data_from_serial)
+    usb_serial_ports = get_usb_serial_ports()
 
-    # # Inicia a thread
+    err = turnOnOffUSBPort("on", "0", 0)
+    if err:
+        return jsonify({"error": "Não foi possível ligar a USB 0"}), 500
+
+    err = turnOnOffUSBPort("on", "1", 2)
+    if err:
+        return jsonify({"error": "Não foi possível ligar a USB 1"}), 500
+
+    # Salva a porta serial que foi conectada
+    connected_serial_port = list(set(get_usb_serial_ports()) - set(usb_serial_ports))[0]
+    logging.info(f"A porta serial conectada foi {connected_serial_port}")
+
+    # Cria a thread
+    thread = threading.Thread(target=get_data_from_serial, args=(connected_serial_port, serial_read_time))
+
+    # Inicia a thread
     thread.start()
 
     try:
@@ -42,8 +63,13 @@ def upload_file():
     # Aguarda o término da thread, caso deseje sincronizar a execução
     thread.join()
 
-    print(turnOnOffUSBPort("off", "0", 0))
-    print(turnOnOffUSBPort("off", "1", 0))
+    err = turnOnOffUSBPort("off", "0", 0)
+    if err:
+        logging.info("Não foi possível desligar a USB 0")
+
+    err = turnOnOffUSBPort("off", "1", 0)
+    if err:
+        logging.info("Não foi possível desligar a USB 1")
 
     with open('results.txt', 'r') as file:
         conteudo = file.read()
@@ -96,11 +122,20 @@ def get_serial_number():
     except subprocess.CalledProcessError:
         return None
 
-def get_data_from_serial():
+def get_data_from_serial(connected_serial_port, serial_read_time):
     try:
-        subprocess.run(["python3", "getSerial.py"])
-    except FileNotFoundError:
-        print("Arquivo 'getSerial.py' não encontrado ou erro ao executar o comando.")
+        logging.info("Iniciando processo para obter dados da Serial")
+        result = subprocess.run(["python3", "getSerial.py", str(connected_serial_port), str(serial_read_time)], 
+                                stdout=subprocess.PIPE, 
+                                stderr=subprocess.PIPE, 
+                                text=True,
+                                check=True)
+        logging.info(f"Resultado da coleta de dados via Serial: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        # Se ocorrer um erro ao executar o processo, o subprocess.CalledProcessError será capturado aqui
+        logging.error("Erro ao executar o processo de coletar dados da serial:", e)
+    except Exception as e:
+        logging.error("Erro ao coletar dados da serial:", e)
 
 def turnOnOffUSBPort(action, usbPort, timeSleep=0):
     data = {'action': action, 'usbPort': usbPort, 'timeSleep': timeSleep}
@@ -112,11 +147,14 @@ def turnOnOffUSBPort(action, usbPort, timeSleep=0):
         response = requests.post(f'http://{rupconHost}:{rupconPort}/manage_usb_power', data=data)
 
         if response.status_code == 200:
-            return f'Resposta da API manage_usb_power: {response.text}'
+            logging.info(f'Resposta da API manage_usb_power: {response.text}')
+            return 0
         else:
-            return f'Erro na requisição: {response.status_code}'
+            logging.info(f'Erro na requisição: {response.status_code}')
+            return 1
     except requests.exceptions.RequestException as e:
-        return f'Erro na requisição: {e}'
+        logging.info(f'Erro na requisição: {e}')
+        return 1
 
 
 if __name__ == '__main__':
