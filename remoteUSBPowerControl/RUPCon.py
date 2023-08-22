@@ -6,31 +6,27 @@ import time
 import sys
 import os
 
+# IDs do fornecedor (Vendor ID) e do produto (Product ID) do dispositivo USB Conectado (Arduino)
+id_vendor = int(os.environ.get("ID_VENDOR_ARDUINO"), 16)
+id_product = int(os.environ.get("ID_PRODUCT_ARDUINO"), 16)
+
 # Configuração básica de log
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Função para encontrar um dispositivo USB
 def search_usb_device(id_vendor, id_product):
-    # Obter todas as portas seriais disponíveis
-    portas_disponiveis = list(serial.tools.list_ports.comports())
-
-    for porta, descricao, info in portas_disponiveis:
-        if f"{id_vendor:04x}:{id_product:04x}" in info:
-            return porta
-
+    for port in serial.tools.list_ports.comports():
+        if id_vendor == port.vid and id_product == port.pid:
+            return port.device
     return None
 
 # Configuração da porta serial do Arduino
-
-# IDs do fornecedor (Vendor ID) e do produto (Product ID) para o dispositivo USB 2341:0043 (Arduino)
-id_vendor = 0x2341
-id_product = 0x0043
 
 # Procurar o dispositivo USB e obter a porta serial associada
 porta_serial = search_usb_device(id_vendor, id_product)
 
 if porta_serial is not None:
-    logging.info(f"Dispositivo USB 2341:0043 encontrado na porta {porta_serial}.")
+    logging.info(f"Dispositivo USB {id_vendor}:{id_product} encontrado na porta {porta_serial}.")
     velocidade_serial = 9600
     
     # Inicializa a conexão serial
@@ -38,7 +34,7 @@ if porta_serial is not None:
     time.sleep(2)  # Aguarda 2 segundos para a inicialização do Arduino
     app = Flask(__name__)
 else:
-    logging.error("Dispositivo USB 2341:0043 não encontrado.")
+    logging.error(f"Dispositivo USB {id_vendor}:{id_product}  não encontrado.")
     sys.exit(1)
 
 

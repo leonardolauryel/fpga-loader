@@ -37,7 +37,7 @@ services:
     networks:
       - fpga-loader-network
     devices:
-      %ARDUINO-DEVICE%
+%ARDUINO-DEVICE%
 
   ReTiCap:
     image: reticap-image

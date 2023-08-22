@@ -30,14 +30,17 @@ services:
     tty: true
     ports:
       - 8001:8001
-    env_file:
-      - .env
+    environment:
+      - RUPCON_PORT=${RUPCON_PORT}
+      - ID_VENDOR_ARDUINO=${ID_VENDOR_ARDUINO}
+      - ID_PRODUCT_ARDUINO=${ID_PRODUCT_ARDUINO}
+    privileged: true
     volumes:
       - ./remoteUSBPowerControl:/home/remoteUSBPowerControl
     networks:
       - fpga-loader-network
     devices:
-      - /dev/ttyACM0:/dev/ttyACM0
+      - /dev/:/dev/
 
   ReTiCap:
     image: reticap-image
