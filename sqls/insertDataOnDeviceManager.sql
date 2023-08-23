@@ -22,6 +22,6 @@ INSERT INTO serial_collector (id,name,serial_number,type_sc,available,connected_
 INSERT INTO serial_collector (id,name,serial_number,type_sc,available,connected_power_supply_id) VALUES (2, 'Coletor Serial 3', null, 'INTEGRATED', True, null);
 
 -- Inserting FPGAs
-INSERT INTO fpga (id,name,manufacturer,serial_number,available,connected_power_supply_id,connected_serial_collector_id) VALUES (0, 'Basys 2 - 100', 'Digilent', '210155296096', True, 2, 1);
-INSERT INTO fpga (id,name,manufacturer,serial_number,available,connected_power_supply_id,connected_serial_collector_id) VALUES (1, 'Nexys 3 - 100', 'Digilent', '210182519945', True, 4, 2);
-INSERT INTO fpga (id,name,manufacturer,serial_number,available,connected_power_supply_id,connected_serial_collector_id) VALUES (2, 'Basys 2 - 250', 'Digilent', '210155261283', True, 0, 0);
+INSERT INTO fpga (id,name,manufacturer,serial_number,startup_time,available,connected_power_supply_id,connected_serial_collector_id) VALUES (0, 'Basys 2 - 100', 'Digilent', '210155296096', 2, True, 2, 1);
+INSERT INTO fpga (id,name,manufacturer,serial_number,startup_time,available,connected_power_supply_id,connected_serial_collector_id) VALUES (1, 'Nexys 3 - 100', 'Digilent', '210182519945', 5, True, 4, 2);
+INSERT INTO fpga (id,name,manufacturer,serial_number,startup_time,available,connected_power_supply_id,connected_serial_collector_id) VALUES (2, 'Basys 2 - 250', 'Digilent', '210155261283', 2, True, 0, 0);

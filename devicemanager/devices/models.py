@@ -108,6 +108,13 @@ class FPGA(models.Model):
         blank=False,
         null=False
     )
+    startup_time = models.IntegerField(
+        blank=False,
+        null=False,
+        validators=[MinValueValidator(0)],
+        verbose_name="Startup time",
+        help_text="Time required (in seconds) for the FPGA to initialize and be able to be programmed"
+    ) 
     available = models.BooleanField(
         default=True,
         blank=False,
