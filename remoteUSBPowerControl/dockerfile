@@ -1,7 +1,5 @@
 FROM ubuntu:22.04
 
-ENV RUPCON_PORT=$RUPCON_PORT
-
 RUN apt-get update && \
     apt-get install -y
 

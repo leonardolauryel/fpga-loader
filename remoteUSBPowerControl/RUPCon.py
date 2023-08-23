@@ -69,5 +69,4 @@ def sendCommand(comando):
         raise ValueError(f"Erro ao enviar comando para o arduino: {str(e)}")
 
 if __name__ == '__main__':
-    rupconPort = os.environ.get("RUPCON_PORT")
-    app.run(host='0.0.0.0', port=rupconPort)
+    app.run(host='0.0.0.0', port=8000)

@@ -22,5 +22,4 @@ def index():
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    reticapPort = os.environ.get("RETICAP_PORT")
-    app.run(host='0.0.0.0', port=reticapPort)
+    app.run(host='0.0.0.0', port=5000)

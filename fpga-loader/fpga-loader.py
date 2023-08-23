@@ -181,9 +181,8 @@ def turnOnOffUSBPort(action, usbPort, timeSleep=0):
 
     try:
         rupconHost = os.environ.get("RUPCON_HOST")
-        rupconPort = os.environ.get("RUPCON_PORT")
 
-        response = requests.post(f'http://{rupconHost}:{rupconPort}/manage_usb_power', data=data)
+        response = requests.post(f'http://{rupconHost}:8000/manage_usb_power', data=data)
 
         if response.status_code == 200:
             logging.info(f'Resposta da API manage_usb_power: {response.text}')
@@ -221,5 +220,4 @@ def getPowerSupplyPorts(data):
     return ports
 
 if __name__ == '__main__':
-    fpgaLoaderPort = os.environ.get("FPGA_LOADER")
-    app.run(host='0.0.0.0', port=fpgaLoaderPort, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=True)

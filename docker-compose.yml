@@ -10,9 +10,11 @@ services:
       dockerfile: dockerfile
     tty: true
     ports:
-      - 8000:8000
-    env_file:
-      - .env
+      - "${FPGA_LOADER:-8000}:8000"
+    environment:
+      - MANAGE_USB_POWER=${MANAGE_USB_POWER}
+      - RUPCON_HOST=${RUPCON_HOST}
+      - DEVICE_MANAGER_HOST=${DEVICE_MANAGER_HOST}
     privileged: true
     volumes:
       - ./fpga-loader:/home/fpga-loader
@@ -29,9 +31,8 @@ services:
       dockerfile: dockerfile
     tty: true
     ports:
-      - 8001:8001
+      - "${RUPCON_PORT:-8001}:8000"
     environment:
-      - RUPCON_PORT=${RUPCON_PORT}
       - ID_VENDOR_ARDUINO=${ID_VENDOR_ARDUINO}
       - ID_PRODUCT_ARDUINO=${ID_PRODUCT_ARDUINO}
     privileged: true
@@ -51,9 +52,7 @@ services:
       dockerfile: dockerfile
     tty: true
     ports:
-      - 5000:5000
-    env_file:
-      - .env
+      - "${RETICAP_PORT:-5000}:5000"
     privileged: true
     volumes:
       - ./realTimeVideoCapture:/home/realTimeVideoCapture
