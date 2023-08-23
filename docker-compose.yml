@@ -77,6 +77,7 @@ services:
       - db-device-manager
     networks:
       - fpga-loader-network
+    restart: always
 
   db-device-manager:
     image: postgres
