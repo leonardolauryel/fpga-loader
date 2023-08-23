@@ -43,7 +43,20 @@ def upload_file():
         return jsonify({"error": "Não foi possível ligar a USB 1"}), 500
 
     # Salva a porta serial que foi conectada
-    connected_serial_port = list(set(get_usb_serial_ports()) - set(usb_serial_ports))[0]
+    connected_serial_port = list(set(get_usb_serial_ports()) - set(usb_serial_ports))
+
+    if len(connected_serial_port) != 1:
+        if(len(connected_serial_port) == 0):
+            err_msg = "Nenhuma porta serial foi conectada. Tente novamente"
+        else:
+            err_msg = "Muitas portas seriais conectadas. Não foi possível identifcar a porta que os dados devem ser capturados. Tente novamente"
+        logging.error(err_msg)
+        turnOnOffUSBPort("off", "all", 0)
+        response = make_response(err_msg, 500)
+        return response
+
+    connected_serial_port = connected_serial_port[0]
+
     logging.info(f"A porta serial conectada foi {connected_serial_port}")
 
     # Cria a thread
@@ -57,7 +70,8 @@ def upload_file():
         output = result.stdout.strip().decode("utf-8")
     except ValueError as err:
         logging.error("Ocorreu um erro: %s", err)
-        response = make_response(str(err), 500)  # Status code 500 - Internal Server Error
+        turnOnOffUSBPort("off", "all", 0)
+        response = make_response(str(err), 500)
         return response
 
     # Aguarda o término da thread, caso deseje sincronizar a execução
