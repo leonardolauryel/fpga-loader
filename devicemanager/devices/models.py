@@ -40,7 +40,7 @@ class PowerSupply(models.Model):
     )
 
     class Meta:
-        db_table = 'power_suply'
+        db_table = 'power_supply'
         ordering = ['num']
         verbose_name = "Power supply"
         verbose_name_plural = "Power Suppliers" 
@@ -78,7 +78,7 @@ class SerialCollector(models.Model):
     )
     connected_power_supply = models.ForeignKey(
         PowerSupply,
-        blank=False,
+        blank=True,
         null=True,
         on_delete=models.SET_NULL
     )

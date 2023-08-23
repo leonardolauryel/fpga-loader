@@ -1,7 +1,7 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+from .views import FPGAViewSet
 
-from . import views
+router = DefaultRouter()
+router.register(r'fpgas', FPGAViewSet)
 
-urlpatterns = [
-    path("", views.index, name="index"),
-]
+urlpatterns = router.urls
