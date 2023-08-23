@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
 import serial.tools.list_ports
 import os
 import subprocess
@@ -34,13 +34,17 @@ def upload_file():
 
     usb_serial_ports = get_usb_serial_ports()
 
-    err = turnOnOffUSBPort("on", "0", 0)
-    if err:
-        return jsonify({"error": "Não foi possível ligar a USB 0"}), 500
+    # Obtem os dados da FPGA a ser programada
+    fpgaData = getFPGADataBySerialNumber(serialNumber)[0]
 
-    err = turnOnOffUSBPort("on", "1", 2)
+    # Obtem as portas que a FPGA e o coletor de dados serial está conectado
+    targetPorts = getPowerSupplyPorts(fpgaData)
+
+    err = turnOnPowerSupply(targetPorts, fpgaData['startup_time'])
     if err:
-        return jsonify({"error": "Não foi possível ligar a USB 1"}), 500
+        logging.error(f"error: {err}")
+        return jsonify({f"error: {err}"}), 500
+
 
     # Salva a porta serial que foi conectada
     connected_serial_port = list(set(get_usb_serial_ports()) - set(usb_serial_ports))
@@ -77,13 +81,10 @@ def upload_file():
     # Aguarda o término da thread, caso deseje sincronizar a execução
     thread.join()
 
-    err = turnOnOffUSBPort("off", "0", 0)
+    turnOffPowerSupply(targetPorts)
     if err:
-        logging.info("Não foi possível desligar a USB 0")
-
-    err = turnOnOffUSBPort("off", "1", 0)
-    if err:
-        logging.info("Não foi possível desligar a USB 1")
+        logging.error(f"error: {err}")
+        return jsonify({f"error: {err}"}), 500
 
     with open('results.txt', 'r') as file:
         conteudo = file.read()
@@ -151,6 +152,30 @@ def get_data_from_serial(connected_serial_port, serial_read_time):
     except Exception as e:
         logging.error("Erro ao coletar dados da serial:", e)
 
+
+def turnOnPowerSupply(ports, startup_time):
+    delay = 0
+    for index, port in enumerate(ports):
+        # Faz com que seja aplicado um delay na ultima porta ligada
+        # para que a FPGA tenha tempo de inicializar
+        if index == (len(ports) - 1):
+            delay = startup_time
+
+        err = turnOnOffUSBPort("on", port, delay)
+        if err:
+            return f"Não foi possível ligar a USB {port}"
+    
+    return 0
+
+def turnOffPowerSupply(ports):
+    delay = 0
+    for port in ports:
+        err = turnOnOffUSBPort("off", port, delay)
+        if err:
+            return f"Não foi possível desligar a USB {port}"
+
+    return 0
+
 def turnOnOffUSBPort(action, usbPort, timeSleep=0):
     data = {'action': action, 'usbPort': usbPort, 'timeSleep': timeSleep}
 
@@ -170,7 +195,31 @@ def turnOnOffUSBPort(action, usbPort, timeSleep=0):
         logging.info(f'Erro na requisição: {e}')
         return 1
 
+def getFPGADataBySerialNumber(serialNumber):
+    deviceManagerHost = os.environ.get("DEVICE_MANAGER_HOST")
+ 
+    response = requests.get(f'http://{deviceManagerHost}:8000/devices/fpgas/?serial_number={serialNumber}')
+
+    if response.status_code != 200:
+        return jsonify({"error": "Não foi possível obter dados da API"}), response.status_code
+    
+    data = response.json()
+    return data
+
+def getPowerSupplyPorts(data):
+    ports = []
+
+    fpgaPowerSupplyPort = data['connected_power_supply']['num']
+    ports.append(fpgaPowerSupplyPort)
+
+    serialCollectorPowerSupply = data['connected_serial_collector']['connected_power_supply']
+    
+    if serialCollectorPowerSupply is not None:
+        serialCollectorPowerSupplyPort = serialCollectorPowerSupply['num']
+        ports.append(serialCollectorPowerSupplyPort)
+
+    return ports
 
 if __name__ == '__main__':
     fpgaLoaderPort = os.environ.get("FPGA_LOADER")
-    app.run(host='0.0.0.0', port=fpgaLoaderPort)
+    app.run(host='0.0.0.0', port=fpgaLoaderPort, debug=True)

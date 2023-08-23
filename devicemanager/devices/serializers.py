@@ -7,6 +7,8 @@ class PowerSupplySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SerialCollectorSerializer(serializers.ModelSerializer):
+    connected_power_supply = PowerSupplySerializer()
+
     class Meta:
         model = SerialCollector
         fields = '__all__'
