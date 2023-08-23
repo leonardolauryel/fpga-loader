@@ -98,10 +98,13 @@ services:
       - .env
     networks:
       - fpga-loader-network
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
 
 networks:
   fpga-loader-network:
 
 volumes:
   postgres_data:
+  pgadmin-data:
   static_volume:
