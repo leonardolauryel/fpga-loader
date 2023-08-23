@@ -61,5 +61,47 @@ services:
     networks:
       - fpga-loader-network
 
+  device-manager:
+    image: device-manager-image
+    container_name: device-manager
+    build:
+      context: ./devicemanager
+      target: development
+    volumes:
+      - static_volume:/home/device-manager/web/staticfiles
+      - ./devicemanager:/home/device-manager/web/
+    env_file:
+      - .env
+    ports:
+      - "${DEVICE_MANAGER_PORT:-8002}:8000"
+    depends_on:
+      - db-device-manager
+    networks:
+      - fpga-loader-network
+
+  db-device-manager:
+    image: postgres
+    container_name: db-device-manager
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - fpga-loader-network
+
+  pg-admin-device-manager:
+    image: dpage/pgadmin4
+    container_name: pg-admin-device-manager
+    ports:
+      - "${PG_ADMIN_PORT:-8003}:80"
+    env_file:
+      - .env
+    networks:
+      - fpga-loader-network
+
 networks:
   fpga-loader-network:
+
+volumes:
+  postgres_data:
+  static_volume:
