@@ -89,7 +89,7 @@ def upload_file():
     with open('results.txt', 'r') as file:
         conteudo = file.read()
     
-    return conteudo
+    return jsonify(conteudo)
 
     
 
