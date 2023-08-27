@@ -15,6 +15,6 @@ class FPGAViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(serial_number__exact=serial_number)
 
         if name is not None:
-            queryset = queryset.filter(name__exact=name)
+            queryset = queryset.filter(name__icontains=name)
 
         return queryset
