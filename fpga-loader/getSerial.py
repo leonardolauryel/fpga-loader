@@ -25,7 +25,6 @@ nome_arquivo = 'results.txt'
 try:
     tempo_inicio = time.time()
     with open(nome_arquivo, 'w') as arquivo:
-        arquivo.write('Resultados da exucução:\n')
         while (time.time() - tempo_inicio) < tempo_leitura:
             # dado_serial = ser.read()
             # dado_decodificado = dado_serial
