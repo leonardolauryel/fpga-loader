@@ -9,6 +9,12 @@ class FPGAViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = FPGA.objects.all()
         serial_number = self.request.query_params.get('serial_number', None)
+        name = self.request.query_params.get('name', None)
+
         if serial_number is not None:
             queryset = queryset.filter(serial_number__exact=serial_number)
+
+        if name is not None:
+            queryset = queryset.filter(name__exact=name)
+
         return queryset
