@@ -27,9 +27,13 @@ try:
     with open(nome_arquivo, 'w') as arquivo:
         arquivo.write('Resultados da exucução:\n')
         while (time.time() - tempo_inicio) < tempo_leitura:
-            dado_serial = ser.read()
-            dado_decodificado = dado_serial
-            arquivo.write(str(dado_decodificado) + '\n')
+            # dado_serial = ser.read()
+            # dado_decodificado = dado_serial
+            # arquivo.write(str(dado_decodificado) + '\n')
+
+            dado_serial = ser.readline()
+            dado_decodificado = dado_serial.decode().strip()
+            arquivo.write(dado_decodificado + '\n')
             
         print("Dados coletados da serial com sucesso")
 except KeyboardInterrupt:
