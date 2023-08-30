@@ -7,7 +7,7 @@ import re
 import logging
 import requests
 
-def get_usb_serial_ports():
+def getUSBSerialPorts():
     usb_ports = list(serial.tools.list_ports.comports())
     usb_ports = [port.device for port in usb_ports if "USB" in port.device]
 
@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 app = Flask(__name__)
 
 @app.route('/upload', methods=['POST'])
-def upload_file():
+def uploadFile():
     logging.info("\n\n\nArquivo recebido via POST")
     file = request.files['file']
     filepath = os.path.join("./", file.filename)
@@ -32,7 +32,7 @@ def upload_file():
     logging.info(f"serialNumber: {serialNumber}")
     logging.info(f"serial_read_time: {serial_read_time}")
 
-    usb_serial_ports = get_usb_serial_ports()
+    usbSerialPorts = getUSBSerialPorts()
 
     # Obtem os dados da FPGA a ser programada
     fpgaData = getFPGADataBySerialNumber(serialNumber)[0]
@@ -40,48 +40,38 @@ def upload_file():
     # Obtem as portas que a FPGA e o coletor de dados serial está conectado
     targetPorts = getPowerSupplyPorts(fpgaData)
 
-    err = turnOnPowerSupply(targetPorts, fpgaData['startup_time'])
+    err = turnOnTargetPowerSupply(targetPorts, fpgaData['startup_time'])
     if err:
         logging.error(f"error: {err}")
         return jsonify({f"error: {err}"}), 500
 
 
     # Salva a porta serial que foi conectada
-    connected_serial_port = list(set(get_usb_serial_ports()) - set(usb_serial_ports))
-
-    if len(connected_serial_port) != 1:
-        if(len(connected_serial_port) == 0):
-            err_msg = "Nenhuma porta serial foi conectada. Tente novamente"
-        else:
-            err_msg = "Muitas portas seriais conectadas. Não foi possível identifcar a porta que os dados devem ser capturados. Tente novamente"
-        logging.error(err_msg)
-        turnOnOffUSBPort("off", "all", 0)
-        response = make_response(err_msg, 500)
+    connectedSerialPort, err = identifyConnectedSerialPort(usbSerialPorts)
+    if err:
+        logging.error(err)
+        response = make_response(err, 500)
         return response
-
-    connected_serial_port = connected_serial_port[0]
-
-    logging.info(f"A porta serial conectada foi {connected_serial_port}")
-
+    
     # Cria a thread
-    thread = threading.Thread(target=get_data_from_serial, args=(connected_serial_port, serial_read_time))
+    thread = threading.Thread(target=get_data_from_serial, args=(connectedSerialPort, serial_read_time))
 
     # Inicia a thread
     thread.start()
 
     try:
-        result = upload_code_to_FPGA(file.filename, serialNumber)
+        result = uploadCodeToFPGA(file.filename, serialNumber)
         output = result.stdout.strip().decode("utf-8")
     except ValueError as err:
         logging.error("Ocorreu um erro: %s", err)
-        turnOnOffUSBPort("off", "all", 0)
+        turnOnOffPowerSupply("off", "all", 0)
         response = make_response(str(err), 500)
         return response
 
     # Aguarda o término da thread, caso deseje sincronizar a execução
     thread.join()
 
-    turnOffPowerSupply(targetPorts)
+    err = turnOffTargetPowerSupply(targetPorts)
     if err:
         logging.error(f"error: {err}")
         return jsonify({f"error: {err}"}), 500
@@ -104,13 +94,13 @@ def getResults():
 
 @app.route('/getConnectedFPGA', methods=['GET'])
 def getConnectedFPGA():
-    print(turnOnOffUSBPort("on", "all", 4))
+    print(turnOnOffPowerSupply("on", "all", 4))
     output = subprocess.check_output(['djtgcfg', 'enum'], universal_newlines=True, encoding='latin1')
-    print(turnOnOffUSBPort("off", "all", 0))
+    print(turnOnOffPowerSupply("off", "all", 0))
     return output
 
 
-def upload_code_to_FPGA(filename, serialNumber):
+def uploadCodeToFPGA(filename, serialNumber):
     if serialNumber == None:
         raise ValueError("Não foi possível obter o Serial Number da FPGA")
 
@@ -137,10 +127,10 @@ def get_serial_number():
     except subprocess.CalledProcessError:
         return None
 
-def get_data_from_serial(connected_serial_port, serial_read_time):
+def get_data_from_serial(connectedSerialPort, serial_read_time):
     try:
         logging.info("Iniciando processo para obter dados da Serial")
-        result = subprocess.run(["python3", "getSerial.py", str(connected_serial_port), str(serial_read_time)], 
+        result = subprocess.run(["python3", "getSerial.py", str(connectedSerialPort), str(serial_read_time)], 
                                 stdout=subprocess.PIPE, 
                                 stderr=subprocess.PIPE, 
                                 text=True,
@@ -153,7 +143,7 @@ def get_data_from_serial(connected_serial_port, serial_read_time):
         logging.error("Erro ao coletar dados da serial:", e)
 
 
-def turnOnPowerSupply(ports, startup_time):
+def turnOnTargetPowerSupply(ports, startup_time):
     delay = 0
     for index, port in enumerate(ports):
         # Faz com que seja aplicado um delay na ultima porta ligada
@@ -161,22 +151,22 @@ def turnOnPowerSupply(ports, startup_time):
         if index == (len(ports) - 1):
             delay = startup_time
 
-        err = turnOnOffUSBPort("on", port, delay)
+        err = turnOnOffPowerSupply("on", port, delay)
         if err:
             return f"Não foi possível ligar a USB {port}"
     
     return 0
 
-def turnOffPowerSupply(ports):
+def turnOffTargetPowerSupply(ports):
     delay = 0
     for port in ports:
-        err = turnOnOffUSBPort("off", port, delay)
+        err = turnOnOffPowerSupply("off", port, delay)
         if err:
             return f"Não foi possível desligar a USB {port}"
 
     return 0
 
-def turnOnOffUSBPort(action, usbPort, timeSleep=0):
+def turnOnOffPowerSupply(action, usbPort, timeSleep=0):
     data = {'action': action, 'usbPort': usbPort, 'timeSleep': timeSleep}
 
     try:
@@ -218,6 +208,26 @@ def getPowerSupplyPorts(data):
         ports.append(serialCollectorPowerSupplyPort)
 
     return ports
+
+def identifyConnectedSerialPort(usbSerialPorts):
+    connectedSerialPort = list(set(getUSBSerialPorts()) - set(usbSerialPorts))
+    err = None
+
+    if len(connectedSerialPort) != 1:
+        if(len(connectedSerialPort) == 0):
+            err = "Nenhuma porta serial foi conectada. Tente novamente"
+        else:
+            err = "Muitas portas seriais conectadas. Não foi possível identifcar a porta que os dados devem ser capturados. Tente novamente"
+
+        turnOnOffPowerSupply("off", "all", 0)
+        return None, err
+        
+
+    connectedSerialPort = connectedSerialPort[0]
+
+    logging.info(f"A porta serial conectada foi {connectedSerialPort}")
+
+    return connectedSerialPort, err
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
