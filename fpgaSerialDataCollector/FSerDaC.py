@@ -54,9 +54,10 @@ def getFPGASerialData():
         with open(fileName, 'w') as file:
             while (time.time() - startTime) < serialReadTime:
                 serialData = ser.readline()
+                time = str(time.time() - startTime)
                 decodedData = serialData.decode().strip()
                 logging.info(decodedData)
-                file.write(decodedData + '\n')
+                file.write(time + '  ' + decodedData + '\n')
                 
             logging.info("Dados coletados da serial com sucesso")
     except Exception as e:
