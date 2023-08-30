@@ -14,6 +14,7 @@ services:
     environment:
       - MANAGE_USB_POWER=${MANAGE_USB_POWER}
       - RUPCON_HOST=${RUPCON_HOST}
+      - FSERDAC_HOST=${FSERDAC_HOST}
       - DEVICE_MANAGER_HOST=${DEVICE_MANAGER_HOST}
     privileged: true
     volumes:
@@ -38,7 +39,7 @@ services:
       - /dev/:/dev/
     networks:
       - fpga-loader-network
-  
+
   RUPCon:
     image: rupcon-image
     container_name: rupcon-container

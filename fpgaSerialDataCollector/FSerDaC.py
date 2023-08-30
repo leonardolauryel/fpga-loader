@@ -15,11 +15,11 @@ app = Flask(__name__)
 def getFPGASerialData():
     # Recebe a porta serial e o tempo de leitura
     serialPort = request.form.get('serialPort')
-    readTime = request.form.get('readTime')
+    serialReadTime = request.form.get('serialReadTime')
     baudRate = request.form.get('baudRate')
 
     logging.info(f"A porta serial recebida foi: {serialPort}")
-    logging.info(f"O tempo de leitura recebido foi: {readTime}")
+    logging.info(f"O tempo de leitura recebido foi: {serialReadTime}")
 
     if baudRate is None:
         baudRate = BAUD_RATE_DEFAULT
@@ -28,19 +28,19 @@ def getFPGASerialData():
         baudRate = int(baudRate)
         logging.info(f"O Baud Rate recebido foi: {baudRate}")
 
-    if serialPort is None or readTime is None:
-        err = "serialPort e o readTime devem ser enviados"
+    if serialPort is None or serialReadTime is None:
+        err = "serialPort e o serialReadTime devem ser enviados"
         logging.error("Erro: %s", err)
         response = make_response(str(err), 500)
         return response
     
     serialPort = str(serialPort)
-    readTime = int(readTime)
+    serialReadTime = int(serialReadTime)
 
     # Configura a conexão serial
     try:
         baudRate = 9600
-        ser = serial.Serial(serialPort, baudRate, timeout=readTime)
+        ser = serial.Serial(serialPort, baudRate, timeout=serialReadTime)
     except Exception as e:
         errMsg = f"Não foi possível conectar com a porta serial {serialPort}"
         logging.error("Erro: %s (%s)", errMsg, str(e))
@@ -53,10 +53,10 @@ def getFPGASerialData():
     try:
         startTime = time.time()
         with open(fileName, 'w') as file:
-            while (time.time() - startTime) < readTime:
+            while (time.time() - startTime) < serialReadTime:
                 serialData = ser.readline()
-                logging.info(serialData)
                 decodedData = serialData.decode().strip()
+                logging.info(decodedData)
                 file.write(decodedData + '\n')
                 
             logging.info("Dados coletados da serial com sucesso")

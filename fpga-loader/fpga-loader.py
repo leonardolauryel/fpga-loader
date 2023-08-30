@@ -6,6 +6,7 @@ import threading
 import re
 import logging
 import requests
+import queue
 
 def getUSBSerialPorts():
     usb_ports = list(serial.tools.list_ports.comports())
@@ -27,10 +28,12 @@ def uploadFile():
 
     # Recebe o serial number da placa a ser programada
     serialNumber = request.form.get('serialNumber')
-    serial_read_time = request.form.get('serialReadTime')
+    serialReadTime = request.form.get('serialReadTime')
+    baudRate = request.form.get('baudRate')
 
     logging.info(f"serialNumber: {serialNumber}")
-    logging.info(f"serial_read_time: {serial_read_time}")
+    logging.info(f"serialReadTime: {serialReadTime}")
+    logging.info(f"baudRate: {baudRate}")
 
     usbSerialPorts = getUSBSerialPorts()
 
@@ -53,8 +56,10 @@ def uploadFile():
         response = make_response(err, 500)
         return response
     
+    q = queue.Queue()
+
     # Cria a thread
-    thread = threading.Thread(target=get_data_from_serial, args=(connectedSerialPort, serial_read_time))
+    thread = threading.Thread(target=getFPGASerialData, args=(connectedSerialPort, serialReadTime, baudRate, q))
 
     # Inicia a thread
     thread.start()
@@ -68,22 +73,24 @@ def uploadFile():
         response = make_response(str(err), 500)
         return response
 
-    # Aguarda o término da thread, caso deseje sincronizar a execução
+    # Aguarda o término da thread para sincronizar a execução
     thread.join()
+
+    # Obtêm o resultado da execução da thread
+    collectedFPGASerialData= q.get()
 
     err = turnOffTargetPowerSupply(targetPorts)
     if err:
         logging.error(f"error: {err}")
         return jsonify({f"error: {err}"}), 500
 
-    with open('results.txt', 'r') as file:
-        conteudo = file.read()
+    if collectedFPGASerialData is None:
+        err = "ERRO: Não foi possível coletar os dados da serial"
+        logging.error(err)
+        response = make_response(err, 500)
+        return response
     
-    return jsonify(conteudo)
-
-    
-
-    #return 'FPGA programada com sucesso!\n\nLogs do adept:\n' + str(output)
+    return collectedFPGASerialData
 
 @app.route('/getResults', methods=['GET'])
 def getResults():
@@ -127,21 +134,28 @@ def get_serial_number():
     except subprocess.CalledProcessError:
         return None
 
-def get_data_from_serial(connectedSerialPort, serial_read_time):
-    try:
-        logging.info("Iniciando processo para obter dados da Serial")
-        result = subprocess.run(["python3", "getSerial.py", str(connectedSerialPort), str(serial_read_time)], 
-                                stdout=subprocess.PIPE, 
-                                stderr=subprocess.PIPE, 
-                                text=True,
-                                check=True)
-        logging.info(f"Resultado da coleta de dados via Serial: {result.stdout}")
-    except subprocess.CalledProcessError as e:
-        # Se ocorrer um erro ao executar o processo, o subprocess.CalledProcessError será capturado aqui
-        logging.error("Erro ao executar o processo de coletar dados da serial:", e)
-    except Exception as e:
-        logging.error("Erro ao coletar dados da serial:", e)
+def getFPGASerialData(serialPort, serialReadTime, baudRate, q):
+    data = {'serialPort': serialPort, 'serialReadTime': serialReadTime}
 
+    if baudRate is not None:
+        data['baudRate'] = baudRate
+
+    try:
+        fserdacHost = os.environ.get("FSERDAC_HOST")
+        response = requests.post(f'http://{fserdacHost}:8000/get_fpga_serial_data', data=data)
+
+        if response.status_code == 200:
+            logging.info(f'Resposta da API get_fpga_serial_data: {response.text}')
+            q.put(response.text)
+            return 0
+        else:
+            logging.info(f'Erro na requisição: {response.status_code}')
+            q.put(None)
+            return 1
+    except requests.exceptions.RequestException as e:
+        logging.info(f'Erro na requisição: {e}')
+        q.put(None)
+        return 1
 
 def turnOnTargetPowerSupply(ports, startup_time):
     delay = 0
