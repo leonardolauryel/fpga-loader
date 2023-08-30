@@ -147,15 +147,15 @@ def getFPGASerialData(serialPort, serialReadTime, baudRate, q):
         if response.status_code == 200:
             logging.info(f'Resposta da API get_fpga_serial_data: {response.text}')
             q.put(response.text)
-            return 0
+            return
         else:
             logging.info(f'Erro na requisição: {response.status_code}')
             q.put(None)
-            return 1
+            return
     except requests.exceptions.RequestException as e:
         logging.info(f'Erro na requisição: {e}')
         q.put(None)
-        return 1
+        return
 
 def turnOnTargetPowerSupply(ports, startup_time):
     delay = 0
