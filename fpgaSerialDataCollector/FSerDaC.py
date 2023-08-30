@@ -23,7 +23,7 @@ def getFPGASerialData():
 
     if baudRate is None:
         baudRate = BAUD_RATE_DEFAULT
-        logging.info(f"baudRate não foi fonecido. Setando para o valor padão {BAUD_RATE_DEFAULT}")
+        logging.info(f"baudRate não foi fornecido. Setando para o valor padão {BAUD_RATE_DEFAULT}")
     else:
         baudRate = int(baudRate)
         logging.info(f"O Baud Rate recebido foi: {baudRate}")
@@ -39,7 +39,6 @@ def getFPGASerialData():
 
     # Configura a conexão serial
     try:
-        baudRate = 9600
         ser = serial.Serial(serialPort, baudRate, timeout=serialReadTime)
     except Exception as e:
         errMsg = f"Não foi possível conectar com a porta serial {serialPort}"
