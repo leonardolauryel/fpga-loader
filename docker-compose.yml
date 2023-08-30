@@ -21,6 +21,23 @@ services:
       - /dev/:/dev/
     networks:
       - fpga-loader-network
+
+  FSerDaC:
+    image: fserdac-image
+    container_name: fserdac-container
+    command: python3 ./FSerDaC.py
+    build:
+      context: ./fpgaSerialDataCollector
+      dockerfile: dockerfile
+    tty: true
+    ports:
+      - "${FSERDAC_PORT:-8004}:8000"
+    privileged: true
+    volumes:
+      - ./fpgaSerialDataCollector:/home/fpgaSerialDataCollector
+      - /dev/:/dev/
+    networks:
+      - fpga-loader-network
   
   RUPCon:
     image: rupcon-image
