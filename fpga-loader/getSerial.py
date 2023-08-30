@@ -5,34 +5,34 @@ import sys
 
 # Recebe por argumento a porta serial e o tempo de leitura
 if len(sys.argv) == 3:
-    porta_serial = str(sys.argv[1])
-    tempo_leitura = int(sys.argv[2])
-    print(f"A porta serial recebida foi: {porta_serial}")
-    print(f"O tempo de leitura foi: {tempo_leitura}")
+    serialPort = str(sys.argv[1])
+    readTime = int(sys.argv[2])
+    print(f"A porta serial recebida foi: {serialPort}")
+    print(f"O tempo de leitura foi: {readTime}")
 else:
     print("A porta serial e o tempo de leitura devem ser enviados por argumento")
     print("Ex.: python3 getSerial.py /dev/ttyUSB0 5")
     sys.exit(1)
 
-velocidade_transmissao = 115200 # Verifique a velocidade de transmissão adequada para o seu dispositivo
+baudRate = 115200
 
-ser = serial.Serial(porta_serial, velocidade_transmissao, timeout=tempo_leitura)
+ser = serial.Serial(serialPort, baudRate, timeout=readTime)
 
 
 # Nome do arquivo para salvar os dados
-nome_arquivo = 'results.txt'
+fileName = 'results.txt'
 
 try:
     tempo_inicio = time.time()
-    with open(nome_arquivo, 'w') as arquivo:
-        while (time.time() - tempo_inicio) < tempo_leitura:
-            # dado_serial = ser.read()
-            # dado_decodificado = dado_serial
-            # arquivo.write(str(dado_decodificado) + '\n')
+    with open(fileName, 'w') as file:
+        while (time.time() - tempo_inicio) < readTime:
+            # serialData = ser.read()
+            # decodedData = serialData
+            # file.write(str(decodedData) + '\n')
 
-            dado_serial = ser.readline()
-            dado_decodificado = dado_serial.decode().strip()
-            arquivo.write(dado_decodificado + '\n')
+            serialData = ser.readline()
+            decodedData = serialData.decode().strip()
+            file.write(decodedData + '\n')
             
         print("Dados coletados da serial com sucesso")
 except KeyboardInterrupt:
