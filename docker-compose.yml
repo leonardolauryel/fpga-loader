@@ -13,7 +13,7 @@ services:
       - "${FPGA_LOADER:-8000}:8000"
     environment:
       - POWER_SUPPLY_CONTROL=${POWER_SUPPLY_CONTROL}
-      - RUPCON_HOST=${RUPCON_HOST}
+      - RPSCON_HOST=${RPSCON_HOST}
       - FSERDAC_HOST=${FSERDAC_HOST}
       - DEVICE_MANAGER_HOST=${DEVICE_MANAGER_HOST}
     privileged: true
@@ -40,22 +40,22 @@ services:
     networks:
       - fpga-loader-network
 
-  RUPCon:
-    image: rupcon-image
-    container_name: rupcon-container
-    command: python3 ./RUPCon.py
+  RPSCon:
+    image: rpscon-image
+    container_name: rpscon-container
+    command: python3 ./RPSCon.py
     build:
-      context: ./remoteUSBPowerControl
+      context: ./remotePowerSupplyControl
       dockerfile: dockerfile
     tty: true
     ports:
-      - "${RUPCON_PORT:-8001}:8000"
+      - "${RPSCON_PORT:-8001}:8000"
     environment:
       - ID_VENDOR_ARDUINO=${ID_VENDOR_ARDUINO}
       - ID_PRODUCT_ARDUINO=${ID_PRODUCT_ARDUINO}
     privileged: true
     volumes:
-      - ./remoteUSBPowerControl:/home/remoteUSBPowerControl
+      - ./remotePowerSupplyControl:/home/remotePowerSupplyControl
     networks:
       - fpga-loader-network
     devices:

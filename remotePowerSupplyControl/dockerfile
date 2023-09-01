@@ -9,6 +9,6 @@ RUN apt-get install -y \
     pip install Flask \
     pip install pyserial
 
-WORKDIR /home/remoteUSBPowerControl
+WORKDIR /home/remotePowerSupplyControl
 
 CMD ["/bin/bash"]
