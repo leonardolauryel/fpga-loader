@@ -38,18 +38,18 @@ else:
     sys.exit(1)
 
 
-@app.route('/manage_usb_power', methods=['POST'])
-def manageUSBPower():
+@app.route('/power_supply_control', methods=['POST'])
+def powerSupplyControl():
     logging.info("Comando recebido")
 
-    # Recebe a ação (on ou off) e a porta USB
+    # Recebe a ação (on ou off) e a porta de fornecimento de energia
     action = request.form.get('action')
-    usbPort = request.form.get('usbPort')
+    powerSupplyPort = request.form.get('powerSupplyPort')
     timeSleep = int(request.form.get('timeSleep'))
 
     try:
-        sendCommand(action + "_" + usbPort)
-        logging.info(f"Enviando comando {action} para a porta USB {usbPort}")
+        sendCommand(action + "_" + powerSupplyPort)
+        logging.info(f"Enviando comando {action} para a porta de fornecimento de energia {powerSupplyPort}")
 
         resposta = ser.readline().decode().strip()
         logging.info(f"Resposta recebida: {resposta}")

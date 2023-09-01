@@ -186,10 +186,10 @@ def turnOnOffPowerSupply(action, usbPort, timeSleep=0):
     try:
         rupconHost = os.environ.get("RUPCON_HOST")
 
-        response = requests.post(f'http://{rupconHost}:8000/manage_usb_power', data=data)
+        response = requests.post(f'http://{rupconHost}:8000/power_supply_control', data=data)
 
         if response.status_code == 200:
-            logging.info(f'Resposta da API manage_usb_power: {response.text}')
+            logging.info(f'Resposta da API power_supply_control: {response.text}')
             return 0
         else:
             logging.info(f'Erro na requisição: {response.status_code}')
