@@ -180,8 +180,8 @@ def turnOffTargetPowerSupply(ports):
 
     return 0
 
-def turnOnOffPowerSupply(action, usbPort, timeSleep=0):
-    data = {'action': action, 'usbPort': usbPort, 'timeSleep': timeSleep}
+def turnOnOffPowerSupply(action, powerSupplyPort, timeSleep=0):
+    data = {'action': action, 'powerSupplyPort': powerSupplyPort, 'timeSleep': timeSleep}
 
     try:
         rpsconHost = os.environ.get("RPSCON_HOST")
