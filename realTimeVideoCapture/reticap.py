@@ -4,7 +4,7 @@ from flask import Flask, Response
 
 app = Flask(__name__)
 
-def generate():
+def getVideo():
     cap = cv2.VideoCapture(0)
 
     while True:
@@ -17,8 +17,8 @@ def generate():
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route('/')
-def index():
-    return Response(generate(),
+def getRealTimeVideo():
+    return Response(getVideo(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
