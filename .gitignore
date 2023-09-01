@@ -1,2 +1,2 @@
 /fpga-loader/*.bit
-/fpgaSerialDataCollector/collectedData.txt
+/fpgaSerialDataCollector/*.txt
